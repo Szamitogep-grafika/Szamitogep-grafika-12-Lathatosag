@@ -190,13 +190,7 @@ public class Main extends PApplet {
 		}
 
 		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
-
-		/*
-		for (TableRow row : table3d.matchRows("[2-3]", "id")) {
-			println(row.getInt("id"));
-			break;
-		}
-		 */
+		
 		int count = 0;
 		for (int i = 1; i < table3d.getRowCount() && count < 2; i++) {
 			var edge1 = table3d.getRow(i);
