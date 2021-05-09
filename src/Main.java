@@ -119,6 +119,8 @@ public class Main extends PApplet {
 	float vx = 0.5f, vy = 1f, vz = 3;
 	float alpha1, alpha2;
 
+	Pixel innerPoint = new Pixel();
+
 
 	public void setup() {
 		size(640, 480);
@@ -153,11 +155,11 @@ public class Main extends PApplet {
 		}
 
 		// LATHATOSAG
-		table3d.insertColumn(0,"id");
+		table3d.insertColumn(0, "id");
 		table3d.insertRow(0, new TableRow[]{});
-		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
 
-		for (int i = 1; i < table3d.getRowCount();) {
+
+		for (int i = 1; i < table3d.getRowCount(); ) {
 			Pixel startVertex = new Pixel();
 			startVertex.x = table3d.getRow(i).getInt("x1");
 			startVertex.y = table3d.getRow(i).getInt("y1");
@@ -166,10 +168,10 @@ public class Main extends PApplet {
 
 			// normalvekthoz 2 el hozzaadasa
 			TableRow edge;
-			for (int j=1; j<3; j++) {
+			for (int j = 1; j < 3; j++) {
 				table3d.insertRow(i, new TableRow[]{});
-				edge = table3d.getRow(i+j);
-				table3d.getRow(i).setInt("id", 2+j-1);
+				edge = table3d.getRow(i + j);
+				table3d.getRow(i).setInt("id", 2 + j - 1);
 				table3d.getRow(i).setInt("x1", edge.getInt("x1"));
 				table3d.getRow(i).setInt("y1", edge.getInt("y1"));
 				table3d.getRow(i).setInt("z1", edge.getInt("z1"));
@@ -182,10 +184,53 @@ public class Main extends PApplet {
 			do {
 				table3d.getRow(i).setInt("id", 0);
 				i++;
-			} while (table3d.getRow(i-1).getInt("x2") != startVertex.x ||
-					table3d.getRow(i-1).getInt("y2") != startVertex.y ||
-					table3d.getRow(i-1).getInt("z2") != startVertex.z);
+			} while (table3d.getRow(i - 1).getInt("x2") != startVertex.x ||
+					table3d.getRow(i - 1).getInt("y2") != startVertex.y ||
+					table3d.getRow(i - 1).getInt("z2") != startVertex.z);
 		}
+
+		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
+
+		/*
+		for (TableRow row : table3d.matchRows("[2-3]", "id")) {
+			println(row.getInt("id"));
+			break;
+		}
+		 */
+		int count = 0;
+		for (int i = 1; i < table3d.getRowCount() && count < 2; i++) {
+			var edge1 = table3d.getRow(i);
+			if (edge1.getInt("id") == 2) {
+				i++;
+				var edge2 = table3d.getRow(i);
+				Pixel midpointEdge1 = new Pixel();
+				midpointEdge1.x = (edge1.getFloat("x1") + edge1.getFloat("x2")) / 2;
+				midpointEdge1.y = (edge1.getFloat("y1") + edge1.getFloat("y2")) / 2;
+				midpointEdge1.z = (edge1.getFloat("z1") + edge1.getFloat("z2")) / 2;
+
+				Pixel midpointEdge2 = new Pixel();
+				midpointEdge2.x = (edge2.getFloat("x1") + edge2.getFloat("x2")) / 2;
+				midpointEdge2.y = (edge2.getFloat("y1") + edge2.getFloat("y2")) / 2;
+				midpointEdge2.z = (edge2.getFloat("z1") + edge2.getFloat("z2")) / 2;
+
+				if (count == 0) {
+					table3d.getRow(0).setFloat("x1", (midpointEdge1.x + midpointEdge2.x) / 2);
+					table3d.getRow(0).setFloat("y1", (midpointEdge1.y + midpointEdge2.y) / 2);
+					table3d.getRow(0).setFloat("z1", (midpointEdge1.z + midpointEdge2.z) / 2);
+				} else {
+					table3d.getRow(0).setFloat("x2", (midpointEdge1.x + midpointEdge2.x) / 2);
+					table3d.getRow(0).setFloat("y2", (midpointEdge1.y + midpointEdge2.y) / 2);
+					table3d.getRow(0).setFloat("z2", (midpointEdge1.z + midpointEdge2.z) / 2);
+				}
+
+				count++;
+			}
+		}
+
+		innerPoint.x = (table3d.getRow(0).getFloat("x1") + table3d.getRow(0).getFloat("x2"))/2;
+		innerPoint.y = (table3d.getRow(0).getFloat("y1") + table3d.getRow(0).getFloat("y2"))/2;
+		innerPoint.z = (table3d.getRow(0).getFloat("z1") + table3d.getRow(0).getFloat("z2"))/2;
+
 
 		// DEBUG
 		saveTable(table3d, "/home/gabor/Documents/Coding/Szamitogep-grafika/Szamitogep-grafika-12-Lathatosag/models/kocka-csonkolt-lathatosag.csv", "csv");
@@ -452,7 +497,7 @@ public class Main extends PApplet {
 		boolean overflow = false;
 
 		if (boundingBox.width > width || boundingBox.height > height) {
-			float ratio = Math.min((width) / (boundingBox.width+1), (height) / (boundingBox.height+1));
+			float ratio = Math.min((width) / (boundingBox.width + 1), (height) / (boundingBox.height + 1));
 			scaleX = ratio;
 			scaleY = ratio;
 			overflow = true;
