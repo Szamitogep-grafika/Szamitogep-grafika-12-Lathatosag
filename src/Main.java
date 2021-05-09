@@ -148,7 +148,7 @@ public class Main extends PApplet {
 		table2d.addColumn("y2");
 
 		try {
-			table3d = loadTable("models/kocka-csonkolt.csv", "header");
+			table3d = loadTable("models/kocka.csv", "header");
 			if (table3d == null) throw new Exception("Nem lehet olvasni a modell-leíró állományt!");
 		} catch (Exception e) {
 			println(e.getMessage());
@@ -191,7 +191,7 @@ public class Main extends PApplet {
 		}
 
 		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
-		
+
 		int count = 0;
 		for (int i = 1; i < table3d.getRowCount() && count < 2; i++) {
 			var edge1 = table3d.getRow(i);
@@ -222,16 +222,16 @@ public class Main extends PApplet {
 			}
 		}
 
-		innerPoint.x = (table3d.getRow(0).getFloat("x1") + table3d.getRow(0).getFloat("x2"))/2;
-		innerPoint.y = (table3d.getRow(0).getFloat("y1") + table3d.getRow(0).getFloat("y2"))/2;
-		innerPoint.z = (table3d.getRow(0).getFloat("z1") + table3d.getRow(0).getFloat("z2"))/2;
+		innerPoint.x = (table3d.getRow(0).getFloat("x1") + table3d.getRow(0).getFloat("x2")) / 2;
+		innerPoint.y = (table3d.getRow(0).getFloat("y1") + table3d.getRow(0).getFloat("y2")) / 2;
+		innerPoint.z = (table3d.getRow(0).getFloat("z1") + table3d.getRow(0).getFloat("z2")) / 2;
 
 
 		// DEBUG
 		saveTable(table3d, "/home/gabor/Documents/Coding/Szamitogep-grafika/Szamitogep-grafika-12-Lathatosag/models/kocka-csonkolt-lathatosag.csv", "csv");
 		// DEBUG END
 
-		method = Method.dimetric;
+		method = Method.central;
 	}
 
 	public void draw() {
@@ -289,7 +289,7 @@ public class Main extends PApplet {
 			}
 		}
 
-		boundingBox.draw();
+		//boundingBox.draw();
 		for (TableRow row : table2d.rows()) {
 			drawLine(row.getFloat("x1"), row.getFloat("y1"), row.getFloat("x2"), row.getFloat("y2"));
 		}
@@ -299,32 +299,85 @@ public class Main extends PApplet {
 		if (recalcProjection) {
 			table2d.clearRows();
 			float[] p;
+			float[][] vectorA = new float[3][3];
+			float[] vectorB = new float[3];
+			Pixel vertex = new Pixel();
+			float[] normal = new float[3];
+			float[] vectorOut = new float[3];
 			int i = 0;
 			for (TableRow row : table3d.rows()) {
 				p = new float[]{0, 0, 0, 1};
 
-				// DEBUG
-				if (row.getInt("id") == 0) {
-					p[0] = row.getFloat("x1");
-					p[1] = row.getFloat("y1");
-					p[2] = row.getFloat("z1");
-					p = matrixMultiplication(T3d, p);
-					float x1 = p[0];
-					float y1 = p[1];
-					table2d.getRow(i).setFloat("x1", x1);
-					table2d.getRow(i).setFloat("y1", y1);
+				float[] p1 = new float[3];
+				p1[0] = row.getFloat("x1");
+				p1[1] = row.getFloat("y1");
+				p1[2] = row.getFloat("z1");
 
-					p = new float[]{0, 0, 0, 1};
-					p[0] = row.getFloat("x2");
-					p[1] = row.getFloat("y2");
-					p[2] = row.getFloat("z2");
-					p = matrixMultiplication(T3d, p);
-					float x2 = p[0];
-					float y2 = p[1];
-					table2d.getRow(i).setFloat("x2", x2);
-					table2d.getRow(i).setFloat("y2", y2);
-					i++;
-				} // DEBUG END
+				float[] p2 = new float[3];
+				p2[0] = row.getFloat("x2");
+				p2[1] = row.getFloat("y2");
+				p2[2] = row.getFloat("z2");
+
+				if (row.getInt("id") == 2) {
+					vectorA = new float[3][3];
+					vectorA[0][1] = -(p2[2] - p1[2]);   // -a3
+					vectorA[0][2] = p[1] - p[1];        // a2
+					vectorA[1][0] = p2[2] - p1[2];      // a3
+					vectorA[1][2] = -(p2[0] - p1[0]);   // -a1
+					vectorA[2][0] = -(p2[1] - p1[1]);   // -a2
+					vectorA[2][1] = p2[0] - p1[0];      // a1
+				}
+				if (row.getInt("id") == 3) {
+					vectorB = new float[3];
+					vectorB[0] = p2[0] - p1[0];
+					vectorB[1] = p2[1] - p1[1];
+					vectorB[2] = p2[2] - p1[2];
+
+					vertex.x = p1[0];
+					vertex.y = p1[1];
+					vertex.z = p1[2];
+
+					innerPoint.x = (table3d.getRow(0).getFloat("x1") + table3d.getRow(0).getFloat("x2")) / 2;
+					innerPoint.y = (table3d.getRow(0).getFloat("y1") + table3d.getRow(0).getFloat("y2")) / 2;
+					innerPoint.z = (table3d.getRow(0).getFloat("z1") + table3d.getRow(0).getFloat("z2")) / 2;
+
+					vectorOut[0] = vertex.x - innerPoint.x;
+					vectorOut[1] = vertex.y - innerPoint.y;
+					vectorOut[2] = vertex.z - innerPoint.z;
+
+					normal = matrixMultiplication(vectorA, vectorB);
+
+					if (crossProduct(vectorOut, normal) < 0) {
+						normal[0] *= -1;
+						normal[1] *= -1;
+						normal[2] *= -1;
+					}
+				}
+
+				if (row.getInt("id") == 0) {
+					float[] directionVector = new float[]{0, 0, d};
+					if (crossProduct(directionVector, normal) >= 0) {
+						p[0] = row.getFloat("x1");
+						p[1] = row.getFloat("y1");
+						p[2] = row.getFloat("z1");
+						p = matrixMultiplication(T3d, p);
+						float x1 = p[0];
+						float y1 = p[1];
+						table2d.getRow(i).setFloat("x1", x1);
+						table2d.getRow(i).setFloat("y1", y1);
+
+						p = new float[]{0, 0, 0, 1};
+						p[0] = row.getFloat("x2");
+						p[1] = row.getFloat("y2");
+						p[2] = row.getFloat("z2");
+						p = matrixMultiplication(T3d, p);
+						float x2 = p[0];
+						float y2 = p[1];
+						table2d.getRow(i).setFloat("x2", x2);
+						table2d.getRow(i).setFloat("y2", y2);
+						i++;
+					}
+				}
 
 			}
 
@@ -406,6 +459,14 @@ public class Main extends PApplet {
 		Axonometric axonometric = new Axonometric(c1, c2, c3, alpha1, alpha2);
 
 		calculateProjection(axonometric.matrix);
+	}
+
+	float crossProduct(float[] a, float[] b) {
+		float sum = 0;
+		for (int i = 0; i < a.length; i++) {
+			sum += a[i] * b[i];
+		}
+		return sum;
 	}
 
 	float[] matrixMultiplication(float[][] t, float[] p) {
