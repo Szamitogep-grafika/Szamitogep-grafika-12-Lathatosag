@@ -161,9 +161,9 @@ public class Main extends PApplet {
 
 		for (int i = 1; i < table3d.getRowCount(); ) {
 			Pixel startVertex = new Pixel();
-			startVertex.x = table3d.getRow(i).getInt("x1");
-			startVertex.y = table3d.getRow(i).getInt("y1");
-			startVertex.z = table3d.getRow(i).getInt("z1");
+			startVertex.x = table3d.getRow(i).getFloat("x1");
+			startVertex.y = table3d.getRow(i).getFloat("y1");
+			startVertex.z = table3d.getRow(i).getFloat("z1");
 			int startIndex = i;
 
 			// normalvekthoz 2 el hozzaadasa
@@ -172,21 +172,21 @@ public class Main extends PApplet {
 				table3d.insertRow(i, new TableRow[]{});
 				edge = table3d.getRow(i + j);
 				table3d.getRow(i).setInt("id", 2 + j - 1);
-				table3d.getRow(i).setInt("x1", edge.getInt("x1"));
-				table3d.getRow(i).setInt("y1", edge.getInt("y1"));
-				table3d.getRow(i).setInt("z1", edge.getInt("z1"));
-				table3d.getRow(i).setInt("x2", edge.getInt("x2"));
-				table3d.getRow(i).setInt("y2", edge.getInt("y2"));
-				table3d.getRow(i).setInt("z2", edge.getInt("z2"));
+				table3d.getRow(i).setFloat("x1", edge.getFloat("x1"));
+				table3d.getRow(i).setFloat("y1", edge.getFloat("y1"));
+				table3d.getRow(i).setFloat("z1", edge.getFloat("z1"));
+				table3d.getRow(i).setFloat("x2", edge.getFloat("x2"));
+				table3d.getRow(i).setFloat("y2", edge.getFloat("y2"));
+				table3d.getRow(i).setFloat("z2", edge.getFloat("z2"));
 				i++;
 			}
 
 			do {
 				table3d.getRow(i).setInt("id", 0);
 				i++;
-			} while (table3d.getRow(i - 1).getInt("x2") != startVertex.x ||
-					table3d.getRow(i - 1).getInt("y2") != startVertex.y ||
-					table3d.getRow(i - 1).getInt("z2") != startVertex.z);
+			} while (table3d.getRow(i - 1).getFloat("x2") != startVertex.x ||
+					table3d.getRow(i - 1).getFloat("y2") != startVertex.y ||
+					table3d.getRow(i - 1).getFloat("z2") != startVertex.z);
 		}
 
 		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
