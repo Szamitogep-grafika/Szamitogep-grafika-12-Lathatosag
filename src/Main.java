@@ -110,6 +110,7 @@ public class Main extends PApplet {
 	boolean translate = false;
 	boolean scale = false;
 	boolean scale3d = false;
+	boolean wireframe = false;
 
 	float translateX, translateY;
 	float scaleX, scaleY;
@@ -668,6 +669,11 @@ public class Main extends PApplet {
 				translate = false;
 				scale3d(1.3f, 1.5f, 1.7f);
 				break;
+			}
+			case 'd': {
+				wireframe = !wireframe;
+				scale = false;
+				translate = false;
 			}
 		}
 	}
