@@ -38,7 +38,7 @@ public class Main extends PApplet {
 	}
 
 	static class Pixel {
-		float x, y;
+		float x, y, z;
 
 		public Pixel() {
 		}
@@ -124,6 +124,13 @@ public class Main extends PApplet {
 		size(640, 480);
 
 		table3d = new Table();
+
+		// id:
+		// 1   = belso pont
+		// 2-3 = az adott lap 2 szomszedos ele a lap normalvektoranak meghatarozasahoz
+		// 0   = az adott lap ele
+
+
 		table3d.addColumn("x1");
 		table3d.addColumn("y1");
 		table3d.addColumn("z1");
@@ -144,6 +151,45 @@ public class Main extends PApplet {
 			println(e.getMessage());
 			System.exit(1);
 		}
+
+		// LATHATOSAG
+		table3d.insertColumn(0,"id");
+		table3d.insertRow(0, new TableRow[]{});
+		table3d.getRow(0).setInt("id", 1); // 1 = belso pont
+
+		for (int i = 1; i < table3d.getRowCount();) {
+			Pixel startVertex = new Pixel();
+			startVertex.x = table3d.getRow(i).getInt("x1");
+			startVertex.y = table3d.getRow(i).getInt("y1");
+			startVertex.z = table3d.getRow(i).getInt("z1");
+			int startIndex = i;
+
+			// normalvekthoz 2 el hozzaadasa
+			TableRow edge;
+			for (int j=1; j<3; j++) {
+				table3d.insertRow(i, new TableRow[]{});
+				edge = table3d.getRow(i+j);
+				table3d.getRow(i).setInt("id", 2+j-1);
+				table3d.getRow(i).setInt("x1", edge.getInt("x1"));
+				table3d.getRow(i).setInt("y1", edge.getInt("y1"));
+				table3d.getRow(i).setInt("z1", edge.getInt("z1"));
+				table3d.getRow(i).setInt("x2", edge.getInt("x2"));
+				table3d.getRow(i).setInt("y2", edge.getInt("y2"));
+				table3d.getRow(i).setInt("z2", edge.getInt("z2"));
+				i++;
+			}
+
+			do {
+				table3d.getRow(i).setInt("id", 0);
+				i++;
+			} while (table3d.getRow(i-1).getInt("x2") != startVertex.x ||
+					table3d.getRow(i-1).getInt("y2") != startVertex.y ||
+					table3d.getRow(i-1).getInt("z2") != startVertex.z);
+		}
+
+		// DEBUG
+		saveTable(table3d, "/home/gabor/Documents/Coding/Szamitogep-grafika/Szamitogep-grafika-12-Lathatosag/models/kocka-csonkolt-lathatosag.csv", "csv");
+		// DEBUG END
 
 		method = Method.dimetric;
 	}
@@ -217,26 +263,29 @@ public class Main extends PApplet {
 			for (TableRow row : table3d.rows()) {
 				p = new float[]{0, 0, 0, 1};
 
-				p[0] = row.getFloat("x1");
-				p[1] = row.getFloat("y1");
-				p[2] = row.getFloat("z1");
-				p = matrixMultiplication(T3d, p);
-				float x1 = p[0];
-				float y1 = p[1];
-				table2d.getRow(i).setFloat("x1", x1);
-				table2d.getRow(i).setFloat("y1", y1);
+				// DEBUG
+				if (row.getInt("id") == 0) {
+					p[0] = row.getFloat("x1");
+					p[1] = row.getFloat("y1");
+					p[2] = row.getFloat("z1");
+					p = matrixMultiplication(T3d, p);
+					float x1 = p[0];
+					float y1 = p[1];
+					table2d.getRow(i).setFloat("x1", x1);
+					table2d.getRow(i).setFloat("y1", y1);
 
-				p = new float[]{0, 0, 0, 1};
-				p[0] = row.getFloat("x2");
-				p[1] = row.getFloat("y2");
-				p[2] = row.getFloat("z2");
-				p = matrixMultiplication(T3d, p);
-				float x2 = p[0];
-				float y2 = p[1];
-				table2d.getRow(i).setFloat("x2", x2);
-				table2d.getRow(i).setFloat("y2", y2);
+					p = new float[]{0, 0, 0, 1};
+					p[0] = row.getFloat("x2");
+					p[1] = row.getFloat("y2");
+					p[2] = row.getFloat("z2");
+					p = matrixMultiplication(T3d, p);
+					float x2 = p[0];
+					float y2 = p[1];
+					table2d.getRow(i).setFloat("x2", x2);
+					table2d.getRow(i).setFloat("y2", y2);
+					i++;
+				} // DEBUG END
 
-				i++;
 			}
 
 			translate(projectionCenter.x + translateX, projectionCenter.y + translateY);
